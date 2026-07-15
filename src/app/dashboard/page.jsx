@@ -1,8 +1,7 @@
-import { getCurrentUser } from "@/server/auth/session";
-import { canManageUsers, ROLE_LABEL } from "@/server/authz/policy";
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import LogoutButton from "./LogoutButton";
+import { getCurrentUser } from "@/server/auth/session";
+import { ROLE_LABEL } from "@/server/authz/policy";
+import CrmShell from "@/components/CrmShell";
 
 export default async function Dashboard() {
   const user = await getCurrentUser();
@@ -12,9 +11,9 @@ export default async function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FBFAF7] p-8">
-      <div className="flex items-center justify-between border-b border-[#E4E1DA] pb-5">
-        <div>
+    <CrmShell user={user}>
+      <div className="p-8">
+        <div className="border-b border-[#E4E1DA] pb-5">
           <h1 className="text-xl font-semibold tracking-tight text-[#14201F]">
             Dashboard
           </h1>
@@ -22,20 +21,7 @@ export default async function Dashboard() {
             {user.name} · {ROLE_LABEL[user.role]}
           </p>
         </div>
-
-        <div className="flex items-center gap-4">
-          {canManageUsers(user) ? (
-            <Link
-              href="/users"
-              className="rounded-md bg-[#0F1C1E] px-3 py-2 text-sm font-medium text-[#FBFAF7] hover:bg-[#16292C]"
-            >
-              Manage users
-            </Link>
-          ) : null}
-
-          <LogoutButton />
-        </div>
       </div>
-    </div>
+    </CrmShell>
   );
 }

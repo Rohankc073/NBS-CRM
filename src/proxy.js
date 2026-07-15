@@ -35,7 +35,10 @@ export async function proxy(request) {
 }
 
 export const config = {
-  // Skip Next.js internals, static files, and the auth API itself —
-  // /api/auth/login must stay reachable to someone with no token.
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/auth).*)"],
+  // Skip Next.js internals, static files, and ALL API routes. Each API
+  // route runs its own getCurrentUser check, so the proxy guarding them
+  // is both redundant and — for public routes like /api/setup and
+  // /api/auth/login — actively wrong, since it bounces token-less
+  // requests to /login before they can run.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api).*)"],
 };

@@ -2,12 +2,27 @@ import { createUserSchema } from "@/lib/validators/user";
 import { getCurrentUser } from "@/server/auth/session";
 import { canManageUsers } from "@/server/authz/policy";
 import { query, queryOne } from "@/server/db";
+import { canManageUsers, canViewUsers } from "@/server/authz/policy";
 import argon2 from "argon2";
 
 export async function GET() {
   const me = await getCurrentUser();
   if (!me) return Response.json({ error: "Not signed in" }, { status: 401 });
   if (!canManageUsers(me))
+    return Response.json({ error: "Forbidden" }, { status: 403 });
+
+  const users = await query(
+    `SELECT id, name, email, role, is_active, created_at
+     FROM users WHERE deleted_at IS NULL ORDER BY created_at DESC`,
+  );
+  return Response.json({ users });
+}
+
+
+export async function GET() {
+  const me = await getCurrentUser();
+  if (!me) return Response.json({ error: "Not signed in" }, { status: 401 });
+  if (!canViewUsers(me))
     return Response.json({ error: "Forbidden" }, { status: 403 });
 
   const users = await query(
