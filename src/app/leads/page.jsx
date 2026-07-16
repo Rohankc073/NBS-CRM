@@ -21,7 +21,6 @@ export default async function LeadsPage({ searchParams }) {
   const where = ["l.deleted_at IS NULL"];
   const params = [];
 
-  // Agents & telecallers see ONLY their own leads. Managers see all.
   if (!isManager) {
     params.push(me.id);
     where.push(`l.assigned_to = $${params.length}`);
@@ -31,10 +30,16 @@ export default async function LeadsPage({ searchParams }) {
     where.push(`l.status_id = $${params.length}`);
   }
   if (search) {
-    params.push(`%${search}%`);
-    where.push(
-      `(l.name ILIKE $${params.length} OR l.phone ILIKE $${params.length})`,
-    );
+    const asNum = parseInt(search.replace("#", ""), 10);
+    if (!isNaN(asNum) && String(asNum) === search.replace("#", "").trim()) {
+      params.push(asNum);
+      where.push(`l.ref_no = $${params.length}`);
+    } else {
+      params.push(`%${search}%`);
+      where.push(
+        `(l.name ILIKE $${params.length} OR l.phone ILIKE $${params.length})`,
+      );
+    }
   }
   const whereSql = where.join(" AND ");
 
@@ -46,26 +51,51 @@ export default async function LeadsPage({ searchParams }) {
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const leads = await query(
-    `SELECT l.id, l.name, l.phone, l.email, l.campaign, l.next_follow_up_at,
-            l.created_at, s.name AS status_name, s.color AS status_color,
+    `SELECT l.id, l.ref_no, l.name, l.phone, l.email, l.campaign,
+            l.budget_min, l.budget_max, l.preferred_type, l.preferred_location,
+            l.next_follow_up_at, l.created_at,
+            s.name AS status_name, s.color AS status_color,
             src.name AS source_name, u.name AS agent_name
      FROM leads l
      LEFT JOIN lead_statuses s ON s.id = l.status_id
      LEFT JOIN lead_sources src ON src.id = l.source_id
      LEFT JOIN users u ON u.id = l.assigned_to
      WHERE ${whereSql}
-     ORDER BY l.created_at DESC
+     ORDER BY l.created_at DESC, l.ref_no DESC
      LIMIT ${PAGE_SIZE} OFFSET ${offset}`,
     params,
   );
 
-  // Dropdown data for filters + the bulk panel.
   const statuses = await query(
     `SELECT id, name FROM lead_statuses WHERE is_active = TRUE ORDER BY sort_order`,
   );
   const sources = await query(
     `SELECT id, name FROM lead_sources WHERE is_active = TRUE ORDER BY name`,
   );
+
+  // Tab counts — total + a few key statuses. Scoped to the agent if needed.
+  const scope = isManager ? "" : "AND l.assigned_to = $1";
+  const scopeParams = isManager ? [] : [me.id];
+  const counts = await queryOne(
+    `SELECT
+       COUNT(*)::int AS all,
+       COUNT(*) FILTER (WHERE s.name = 'New')::int AS new,
+       COUNT(*) FILTER (WHERE s.name = 'Hot')::int AS hot,
+       COUNT(*) FILTER (WHERE s.name = 'Warm')::int AS warm,
+       COUNT(*) FILTER (WHERE s.name = 'Interested')::int AS interested
+     FROM leads l
+     LEFT JOIN lead_statuses s ON s.id = l.status_id
+     WHERE l.deleted_at IS NULL ${scope}`,
+    scopeParams,
+  );
+
+  // Map key status names to their IDs so tabs can filter by id.
+  const keyStatuses = await query(
+    `SELECT id, name FROM lead_statuses
+     WHERE name IN ('New','Hot','Warm','Interested') AND is_active = TRUE`,
+  );
+  const statusIdByName = {};
+  keyStatuses.forEach((s) => { statusIdByName[s.name] = s.id; });
 
   return (
     <CrmShell user={me}>
@@ -79,6 +109,8 @@ export default async function LeadsPage({ searchParams }) {
         total={total}
         statusId={statusId}
         search={search}
+        counts={counts}
+        statusIdByName={statusIdByName}
       />
     </CrmShell>
   );

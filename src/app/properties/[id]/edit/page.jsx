@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/server/auth/session";
 import { canApproveProperty } from "@/server/authz/policy";
 import { query, queryOne } from "@/server/db";
 import CrmShell from "@/components/CrmShell";
+import BackButton from "@/components/BackButton";
 import EditPropertyForm from "./EditPropertyForm";
 
 export default async function EditPropertyPage({ params }) {
@@ -21,7 +22,6 @@ export default async function EditPropertyPage({ params }) {
   );
   if (!property) notFound();
 
-  // Dropdown data + current media, loaded server-side.
   const types = await query(
     `SELECT id, name FROM property_types WHERE is_active = TRUE ORDER BY sort_order`,
   );
@@ -40,7 +40,8 @@ export default async function EditPropertyPage({ params }) {
     <CrmShell user={me}>
       <div className="p-8">
         <div className="mx-auto max-w-3xl">
-          <h1 className="text-xl font-semibold tracking-tight text-[#14201F]">
+          <BackButton label="← Back" fallback={`/properties/${id}`} />
+          <h1 className="mt-3 text-xl font-semibold tracking-tight text-[#14201F]">
             Edit property
           </h1>
           <EditPropertyForm
