@@ -1,7 +1,7 @@
+import CrmShell from "@/components/CrmShell";
 import { getCurrentUser } from "@/server/auth/session";
-import { canViewUsers, canManageUsers } from "@/server/authz/policy";
+import { canManageUsers, canViewUsers } from "@/server/authz/policy";
 import { query } from "@/server/db";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import UsersClient from "./UsersClient";
 
@@ -18,30 +18,26 @@ export default async function UsersPage() {
      FROM users WHERE deleted_at IS NULL ORDER BY created_at DESC`,
   );
 
-  // Tells the client whether to render the Add / Remove controls.
   const canManage = canManageUsers(me);
 
   return (
-    <div className="min-h-screen bg-[#FBFAF7] p-8">
-      <div className="mx-auto max-w-4xl">
-        <Link
-          href="/dashboard"
-          className="text-xs text-[#6C7A78] hover:text-[#14201F]"
-        >
-          ← Dashboard
-        </Link>
+    <CrmShell user={me}>
+      <div className="p-8">
+        <div className="mx-auto max-w-5xl">
+          <div className="border-b border-[#E4E1DA] pb-5">
+            <h1 className="text-xl font-semibold tracking-tight text-[#14201F]">
+              Users
+            </h1>
+            <p className="mt-1 text-sm text-[#6C7A78]">
+              {canManage
+                ? "Create, edit, and manage team accounts."
+                : "View the team here. Contact a Super Admin to make changes."}
+            </p>
+          </div>
 
-        <h1 className="mt-3 text-xl font-semibold tracking-tight text-[#14201F]">
-          Users
-        </h1>
-        <p className="mt-1 text-sm text-[#6C7A78]">
-          {canManage
-            ? "Accounts you create here can sign in immediately."
-            : "You can view the team here. Contact a Super Admin to make changes."}
-        </p>
-
-        <UsersClient initialUsers={users} canManage={canManage} />
+          <UsersClient initialUsers={users} canManage={canManage} />
+        </div>
       </div>
-    </div>
+    </CrmShell>
   );
 }

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 const STATUS_STYLE = {
   pending: "bg-[#C58A12]/10 text-[#8a6410] border-[#C58A12]/30",
@@ -14,15 +15,52 @@ const AED = (n) =>
 
 const pill = "rounded-full border px-3 py-1 text-xs capitalize transition";
 
-export default function PropertiesClient({ initial, canCreate, canReview }) {
+export default function PropertiesClient({
+  initial,
+  canCreate,
+  canReview,
+  page,
+  totalPages,
+  total,
+  status,
+  search,
+}) {
+  const router = useRouter();
+  const params = useSearchParams();
   const [items, setItems] = useState(initial);
   const [error, setError] = useState("");
-  const [filter, setFilter] = useState("all");
+  const [searchInput, setSearchInput] = useState(search || "");
 
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkFile, setBulkFile] = useState(null);
   const [bulkBusy, setBulkBusy] = useState(false);
   const [bulkResult, setBulkResult] = useState(null);
+
+  useEffect(() => {
+    setItems(initial);
+  }, [initial]);
+
+  function go(overrides) {
+    const next = new URLSearchParams(params.toString());
+    Object.entries(overrides).forEach(([k, v]) => {
+      if (v == null || v === "" || v === "all") next.delete(k);
+      else next.set(k, v);
+    });
+    router.push(`/properties?${next.toString()}`);
+  }
+
+  const firstRender = useRef(true);
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    const t = setTimeout(() => {
+      go({ q: searchInput, page: 1 });
+    }, 350);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchInput]);
 
   async function review(id, action) {
     let reason = null;
@@ -60,7 +98,6 @@ export default function PropertiesClient({ initial, canCreate, canReview }) {
     if (!bulkFile) return;
     setBulkBusy(true);
     setBulkResult(null);
-
     const fd = new FormData();
     fd.append("file", bulkFile);
     const res = await fetch("/api/properties/bulk", {
@@ -68,37 +105,41 @@ export default function PropertiesClient({ initial, canCreate, canReview }) {
       body: fd,
     });
     const data = await res.json().catch(() => ({}));
-
     setBulkBusy(false);
     if (!res.ok) {
-      setBulkResult({ ok: false, error: data.error, details: data.details || [] });
+      setBulkResult({
+        ok: false,
+        error: data.error,
+        details: data.details || [],
+      });
     } else {
       setBulkResult({ ok: true, imported: data.imported });
-      setTimeout(() => window.location.reload(), 1200);
+      setTimeout(() => router.refresh(), 1200);
     }
   }
 
-  const shown =
-    filter === "all"
-      ? items
-      : items.filter((p) => p.approval_status === filter);
-  const pendingCount = items.filter(
-    (p) => p.approval_status === "pending",
-  ).length;
+  const field =
+    "w-full rounded-md border border-[#E4E1DA] bg-white px-3 py-2 text-sm text-[#14201F] outline-none transition focus:border-[#1F7A6B] focus:ring-2 focus:ring-[#1F7A6B]/20";
+
+  const pageNums = [];
+  const span = 2;
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages || (i >= page - span && i <= page + span)) {
+      pageNums.push(i);
+    } else if (pageNums[pageNums.length - 1] !== "...") {
+      pageNums.push("...");
+    }
+  }
 
   return (
     <div className="p-8">
+      {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#E4E1DA] pb-5">
         <div>
           <h1 className="text-xl font-semibold tracking-tight text-[#14201F]">
             Properties
           </h1>
-          <p className="mt-1 text-sm text-[#6C7A78]">
-            {items.length} total
-            {canReview && pendingCount > 0
-              ? " - " + pendingCount + " awaiting review"
-              : ""}
-          </p>
+          <p className="mt-1 text-sm text-[#6C7A78]">{total} total</p>
         </div>
         <div className="flex gap-2">
           {canReview ? (
@@ -123,24 +164,34 @@ export default function PropertiesClient({ initial, canCreate, canReview }) {
         </div>
       </div>
 
-      <div className="mt-5 flex flex-wrap gap-2">
-        {["all", "pending", "approved", "rejected"].map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={
-              pill +
-              " " +
-              (filter === f
-                ? "border-[#1F7A6B] bg-[#1F7A6B] text-white"
-                : "border-[#E4E1DA] bg-white text-[#6C7A78] hover:border-[#1F7A6B]")
-            }
-          >
-            {f}
-          </button>
-        ))}
+      {/* Search + filters */}
+      <div className="mt-5 flex flex-wrap items-center gap-3">
+        <input
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          placeholder="Search name or community..."
+          className={field + " max-w-xs"}
+        />
+        <div className="flex flex-wrap gap-2">
+          {["all", "pending", "approved", "rejected"].map((f) => (
+            <button
+              key={f}
+              onClick={() => go({ status: f, page: 1 })}
+              className={
+                pill +
+                " " +
+                (status === f
+                  ? "border-[#1F7A6B] bg-[#1F7A6B] text-white"
+                  : "border-[#E4E1DA] bg-white text-[#6C7A78] hover:border-[#1F7A6B]")
+              }
+            >
+              {f}
+            </button>
+          ))}
+        </div>
       </div>
 
+      {/* Bulk panel */}
       {canReview && bulkOpen ? (
         <div className="mt-5 rounded-lg border border-[#E4E1DA] bg-white p-5">
           <h2 className="text-sm font-semibold text-[#14201F]">
@@ -151,9 +202,10 @@ export default function PropertiesClient({ initial, canCreate, canReview }) {
             images and documents later from each Edit page. If any row has an
             error, nothing is imported.
           </p>
-          
-           <button
-            onClick={() => { window.location.href = "/api/properties/bulk"; }}
+          <button
+            onClick={() => {
+              window.location.href = "/api/properties/bulk";
+            }}
             className="mt-3 inline-block text-sm text-[#1F7A6B] hover:underline"
           >
             Download CSV template
@@ -199,21 +251,14 @@ export default function PropertiesClient({ initial, canCreate, canReview }) {
         </p>
       ) : null}
 
-      {shown.length === 0 ? (
+      {/* Grid */}
+      {items.length === 0 ? (
         <div className="mt-16 text-center">
-          <p className="text-sm text-[#6C7A78]">No properties here yet.</p>
-          {canCreate ? (
-            <Link
-              href="/properties/new"
-              className="mt-2 inline-block text-sm text-[#1F7A6B] hover:underline"
-            >
-              Add your first property
-            </Link>
-          ) : null}
+          <p className="text-sm text-[#6C7A78]">No properties match.</p>
         </div>
       ) : (
         <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {shown.map((p) => (
+          {items.map((p) => (
             <div
               key={p.id}
               className="group overflow-hidden rounded-xl border border-[#E4E1DA] bg-white transition hover:border-[#1F7A6B] hover:shadow-sm"
@@ -243,7 +288,6 @@ export default function PropertiesClient({ initial, canCreate, canReview }) {
                   </span>
                 </div>
               </Link>
-
               <div className="p-4">
                 <Link href={`/properties/${p.id}`}>
                   <h3 className="truncate font-medium text-[#14201F] group-hover:text-[#1F7A6B]">
@@ -254,23 +298,19 @@ export default function PropertiesClient({ initial, canCreate, canReview }) {
                   {p.type_name || "-"}
                   {p.community ? " - " + p.community : ""}
                 </p>
-
                 <div className="mt-3 flex items-center gap-3 text-xs text-[#6C7A78]">
                   {p.bedrooms != null ? <span>{p.bedrooms} bed</span> : null}
                   {p.bathrooms != null ? <span>{p.bathrooms} bath</span> : null}
                   <span className="capitalize">{p.availability}</span>
                 </div>
-
                 <div className="mt-3 text-sm font-semibold text-[#1F7A6B]">
                   {AED(p.price)}
                 </div>
-
                 {canReview ? (
                   <p className="mt-2 truncate text-xs text-[#9AA6A4]">
                     Added by {p.created_by_name || "-"}
                   </p>
                 ) : null}
-
                 {canReview ? (
                   <div className="mt-3 border-t border-[#F0EEE9] pt-3">
                     {p.approval_status === "pending" ? (
@@ -289,7 +329,6 @@ export default function PropertiesClient({ initial, canCreate, canReview }) {
                         </button>
                       </div>
                     ) : null}
-
                     <div className="mt-2 flex justify-end gap-4">
                       <Link
                         href={`/properties/${p.id}/edit`}
@@ -311,6 +350,46 @@ export default function PropertiesClient({ initial, canCreate, canReview }) {
           ))}
         </div>
       )}
+
+      {/* Pagination */}
+      {totalPages > 1 ? (
+        <div className="mt-8 flex items-center justify-center gap-1">
+          <button
+            onClick={() => go({ page: page - 1 })}
+            disabled={page <= 1}
+            className="rounded-md border border-[#E4E1DA] px-3 py-1.5 text-sm text-[#6C7A78] hover:border-[#1F7A6B] disabled:opacity-30"
+          >
+            Prev
+          </button>
+          {pageNums.map((n, i) =>
+            n === "..." ? (
+              <span key={"e" + i} className="px-2 text-sm text-[#9AA6A4]">
+                ...
+              </span>
+            ) : (
+              <button
+                key={n}
+                onClick={() => go({ page: n })}
+                className={
+                  "rounded-md px-3 py-1.5 text-sm transition " +
+                  (n === page
+                    ? "bg-[#0F1C1E] text-white"
+                    : "border border-[#E4E1DA] text-[#6C7A78] hover:border-[#1F7A6B]")
+                }
+              >
+                {n}
+              </button>
+            ),
+          )}
+          <button
+            onClick={() => go({ page: page + 1 })}
+            disabled={page >= totalPages}
+            className="rounded-md border border-[#E4E1DA] px-3 py-1.5 text-sm text-[#6C7A78] hover:border-[#1F7A6B] disabled:opacity-30"
+          >
+            Next
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
