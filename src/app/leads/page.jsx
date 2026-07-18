@@ -97,6 +97,15 @@ export default async function LeadsPage({ searchParams }) {
   const statusIdByName = {};
   keyStatuses.forEach((s) => { statusIdByName[s.name] = s.id; });
 
+  // Agents for bulk-assign (managers only).
+  const agents = isManager
+    ? await query(
+        `SELECT id, name FROM users
+         WHERE role IN ('sales_agent','telecaller') AND is_active = TRUE AND deleted_at IS NULL
+         ORDER BY name`,
+      )
+    : [];
+
   return (
     <CrmShell user={me}>
       <LeadsClient
@@ -104,6 +113,7 @@ export default async function LeadsPage({ searchParams }) {
         statuses={statuses}
         sources={sources}
         canImport={isManager}
+        agents={agents}
         page={page}
         totalPages={totalPages}
         total={total}

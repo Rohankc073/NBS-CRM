@@ -1,0 +1,31 @@
+[33mcommit 085a18568ae04131fb6405d4c4daab366bae2bab[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Author: Rohankc073 <rohankc073@gmail.com>
+Date:   Thu Jul 16 18:37:12 2026 +0400
+
+    Leads
+
+ .gitignore                                   |   2 [32m+[m
+ package-lock.json                            | 770 [32m++++++++++++++++++++++++++[m[31m-[m
+ package.json                                 |   4 [32m+[m[31m-[m
+ src/app/api/leads/[id]/route.js              | 109 [32m++++[m
+ src/app/api/leads/[id]/status/route.js       |  55 [32m++[m
+ src/app/api/leads/sheets/[id]/route.js       |  12 [32m+[m
+ src/app/api/leads/sheets/route.js            |  52 [32m++[m
+ src/app/api/leads/sheets/sync/route.js       |  31 [32m++[m
+ src/app/api/leads/sheets/test/route.js       |  20 [32m+[m
+ src/app/dashboard/page.jsx                   | 138 [32m++++[m[31m-[m
+ src/app/leads/LeadsClient.jsx                | 406 [32m++++++[m[31m--------[m
+ src/app/leads/[id]/LeadDetailClient.jsx      | 273 [32m++++++++++[m
+ src/app/leads/[id]/page.jsx                  |  65 [32m+++[m
+ src/app/leads/page.jsx                       |  52 [32m+[m[31m-[m
+ src/app/leads/sheets/SheetsClient.jsx        | 156 [32m++++++[m
+ src/app/leads/sheets/page.jsx                |  33 [32m++[m
+ src/app/properties/PropertiesClient.jsx      | 406 [32m+++++[m[31m---------[m
+ src/app/properties/[id]/edit/page.jsx        |   5 [32m+[m[31m-[m
+ src/app/properties/[id]/page.jsx             | 249 [32m+++++[m[31m----[m
+ src/components/BackButton.jsx                |  20 [32m+[m
+ src/server/db/migrations/008_lead_ref.sql    |  17 [32m+[m
+ src/server/db/migrations/009_lead_sheets.sql |  22 [32m+[m
+ src/server/leads/sheets.js                   |  34 [32m++[m
+ src/server/leads/sync.js                     | 145 [32m+++++[m
+ 24 files changed, 2433 insertions(+), 643 deletions(-)

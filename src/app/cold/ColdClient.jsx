@@ -1,12 +1,12 @@
 "use client";
 
-import { Upload, UserCheck } from "lucide-react";
+import { Upload, UserCheck, X, Search as SearchIcon, ChevronLeft, ChevronRight, PhoneCall } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const fieldCls =
-  "w-full rounded-md border border-[#E4E1DA] bg-white px-3 py-2 text-sm text-[#14201F] outline-none transition focus:border-[#1F7A6B] focus:ring-2 focus:ring-[#1F7A6B]/20";
+  "w-full rounded-lg border border-[#E4E1DA] bg-white px-3.5 py-2.5 text-sm text-[#14201F] outline-none transition-all duration-200 placeholder:text-[#B7BFBD] focus:border-[#1F7A6B] focus:ring-4 focus:ring-[#1F7A6B]/10";
 
 const STATUS_STYLE = {
   New: { bg: "#6C7A7818", fg: "#6C7A78" },
@@ -164,46 +164,39 @@ export default function ColdClient({
     { key: "Callback", label: "Callback", count: counts?.callback },
   ];
 
+  const activeFilterCount = (status && status !== "all" ? 1 : 0) + (search ? 1 : 0);
+
   return (
-    <div className="p-8">
-      {/* Header: tabs + import */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-1">
-          {tabs.map((t) => {
-            const active =
-              (t.key === "all" && (status === "all" || !status)) ||
-              status === t.key;
-            return (
-              <button
-                key={t.key}
-                onClick={() => go({ status: t.key, page: 1 })}
-                className={
-                  "rounded-lg px-3 py-1.5 text-sm font-medium transition " +
-                  (active
-                    ? "bg-[#1F7A6B] text-white"
-                    : "text-[#6C7A78] hover:bg-[#F0EEE9]")
-                }
-              >
-                {t.label}
-                {t.count != null ? (
-                  <span
-                    className={
-                      "ml-1.5 text-xs " +
-                      (active ? "text-white/80" : "text-[#9AA6A4]")
-                    }
-                  >
-                    {t.count}
-                  </span>
-                ) : null}
-              </button>
-            );
-          })}
+    <div className="p-8 font-sans">
+      <style jsx global>{`
+        @import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&display=swap");
+        .font-serif { font-family: "Fraunces", ui-serif, Georgia, serif; font-optical-sizing: auto; }
+        .font-sans { font-family: "Work Sans", ui-sans-serif, system-ui, sans-serif; }
+        @keyframes riseIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .rise-in { animation: riseIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both; }
+      `}</style>
+
+      {/* Page title */}
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1F7A6B]/10 text-[#1F7A6B]">
+              <PhoneCall size={15} />
+            </span>
+            <h1 className="font-serif text-[26px] font-semibold tracking-tight text-[#14201F]">
+              Cold Calling
+            </h1>
+          </div>
+          <p className="mt-1 text-[13px] text-[#8C9795]">
+            {total.toLocaleString("en-AE")} total {total === 1 ? "contact" : "contacts"} in the pipeline
+          </p>
         </div>
+
         {canManage ? (
           <div className="flex items-center gap-2">
             <Link
               href="/cold/sheets"
-              className="rounded-md border border-[#E4E1DA] bg-white px-4 py-2 text-sm font-medium text-[#14201F] transition hover:border-[#1F7A6B]"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#E4E1DA] bg-white px-4 py-2 text-sm font-medium text-[#14201F] shadow-sm transition hover:border-[#1F7A6B] hover:text-[#1F7A6B]"
             >
               Google Sheets
             </Link>
@@ -212,138 +205,213 @@ export default function ColdClient({
                 setImportOpen(!importOpen);
                 setResult(null);
               }}
-              className="flex items-center gap-2 rounded-md bg-[#0F1C1E] px-4 py-2 text-sm font-medium text-[#FBFAF7] hover:bg-[#16292C]"
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#0F1C1E] px-4 py-2 text-sm font-medium text-[#FBFAF7] shadow-sm transition hover:bg-[#16292C] hover:shadow-md"
             >
-              <Upload size={16} /> Import
+              {importOpen ? <X size={15} /> : <Upload size={15} />} Import
             </button>
           </div>
         ) : null}
       </div>
 
+      {/* Tabs */}
+      <div className="mb-6 flex flex-wrap items-center gap-1.5 rounded-2xl border border-[#E7E3D9] bg-white p-1.5 shadow-[0_1px_2px_rgba(15,28,30,0.03)]">
+        {tabs.map((t) => {
+          const active =
+            (t.key === "all" && (status === "all" || !status)) ||
+            status === t.key;
+          return (
+            <button
+              key={t.key}
+              onClick={() => go({ status: t.key, page: 1 })}
+              className={
+                "rounded-xl px-3.5 py-1.5 text-sm font-medium transition-all duration-200 " +
+                (active
+                  ? "bg-gradient-to-r from-[#1F7A6B] to-[#186459] text-white shadow-sm"
+                  : "text-[#6C7A78] hover:bg-[#F7F5F0]")
+              }
+            >
+              {t.label}
+              {t.count != null ? (
+                <span
+                  className={
+                    "ml-1.5 text-xs " +
+                    (active ? "text-white/75" : "text-[#AAB3B0]")
+                  }
+                >
+                  {t.count}
+                </span>
+              ) : null}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Import panel */}
       {canManage && importOpen ? (
-        <div className="mt-4 rounded-lg border border-[#E4E1DA] bg-white p-5">
-          <h2 className="text-sm font-semibold text-[#14201F]">
-            Import cold contacts
-          </h2>
-          <p className="mt-1 text-xs text-[#6C7A78]">
-            Name and phone required; other columns optional. Duplicates (by
-            phone) skipped.
-          </p>
-          <button
-            onClick={() => {
-              window.location.href = "/api/cold/bulk";
-            }}
-            className="mt-3 inline-block text-sm text-[#1F7A6B] hover:underline"
-          >
-            Download CSV template
-          </button>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-[#14201F]">
-                Batch label (optional)
-              </label>
-              <input
-                className={fieldCls}
-                value={batch}
-                onChange={(e) => setBatch(e.target.value)}
-                placeholder="e.g. Marina Towers list"
-              />
-            </div>
-            <label className="flex items-end gap-2 pb-2 text-sm text-[#14201F]">
-              <input
-                type="checkbox"
-                checked={autoAssign}
-                onChange={(e) => setAutoAssign(e.target.checked)}
-                className="h-4 w-4 accent-[#1F7A6B]"
-              />
-              Auto-distribute to agents (round-robin)
-            </label>
-          </div>
-          <div className="mt-4 flex items-center gap-3">
-            <input
-              type="file"
-              accept=".csv"
-              onChange={(e) => setFile(e.target.files[0] || null)}
-              className="block text-xs text-[#6C7A78] file:mr-3 file:rounded-md file:border-0 file:bg-[#0F1C1E] file:px-3 file:py-2 file:text-xs file:text-[#FBFAF7] hover:file:bg-[#16292C]"
-            />
+        <div className="rise-in mb-6 overflow-hidden rounded-2xl border border-[#E7E3D9] bg-white shadow-[0_1px_2px_rgba(15,28,30,0.04),0_12px_28px_-16px_rgba(15,28,30,0.12)]">
+          <div className="border-b border-[#F0EEE6] px-6 py-5">
+            <h2 className="font-serif text-lg font-semibold text-[#14201F]">
+              Import cold contacts
+            </h2>
+            <p className="mt-1 text-xs text-[#8C9795]">
+              Name and phone required; other columns optional. Duplicates (by
+              phone) skipped.
+            </p>
             <button
-              onClick={doImport}
-              disabled={!file || busy}
-              className="rounded-md bg-[#1F7A6B] px-3 py-2 text-sm font-medium text-white hover:bg-[#1a6659] disabled:opacity-40"
+              onClick={() => {
+                window.location.href = "/api/cold/bulk";
+              }}
+              className="mt-3 inline-block text-sm font-medium text-[#1F7A6B] hover:underline"
             >
-              {busy ? "Importing" : "Import"}
+              Download CSV template
             </button>
           </div>
-          {result && result.ok ? (
-            <p className="mt-3 text-sm text-[#1F7A6B]">
-              Imported {result.imported}
-              {result.skipped ? `, skipped ${result.skipped}` : ""}. Refreshing.
-            </p>
-          ) : null}
-          {result && !result.ok ? (
-            <p className="mt-3 border-l-2 border-[#A03A2B] pl-3 text-sm text-[#A03A2B]">
-              {result.error}
-            </p>
-          ) : null}
+
+          <div className="px-6 py-6">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.08em] text-[#8C9795]">
+                  Batch label (optional)
+                </label>
+                <input
+                  className={fieldCls}
+                  value={batch}
+                  onChange={(e) => setBatch(e.target.value)}
+                  placeholder="e.g. Marina Towers list"
+                />
+              </div>
+              <label className="flex items-end gap-2 pb-2.5 text-sm text-[#14201F]">
+                <input
+                  type="checkbox"
+                  checked={autoAssign}
+                  onChange={(e) => setAutoAssign(e.target.checked)}
+                  className="h-4 w-4 accent-[#1F7A6B]"
+                />
+                Auto-distribute to agents (round-robin)
+              </label>
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-dashed border-[#D8D3C6] bg-[#FBF9F4] p-4">
+              <input
+                type="file"
+                accept=".csv"
+                onChange={(e) => setFile(e.target.files[0] || null)}
+                className="block text-xs text-[#6C7A78] file:mr-3 file:rounded-full file:border-0 file:bg-[#0F1C1E] file:px-3.5 file:py-2 file:text-xs file:font-medium file:text-[#FBFAF7] hover:file:bg-[#16292C]"
+              />
+              {file ? <span className="text-xs text-[#8C9795]">{file.name}</span> : null}
+              <button
+                onClick={doImport}
+                disabled={!file || busy}
+                className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#1F7A6B] to-[#186459] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <Upload size={14} className={busy ? "animate-pulse" : ""} />
+                {busy ? "Importing…" : "Import"}
+              </button>
+            </div>
+
+            {result && result.ok ? (
+              <p className="mt-3 rounded-lg bg-[#1F7A6B]/8 px-3 py-2 text-sm text-[#186459]">
+                Imported {result.imported}
+                {result.skipped ? `, skipped ${result.skipped}` : ""}. Refreshing.
+              </p>
+            ) : null}
+            {result && !result.ok ? (
+              <div className="mt-3 rounded-lg border-l-[3px] border-[#A03A2B] bg-[#FBEEE9] px-4 py-3">
+                <p className="text-sm text-[#A03A2B]">{result.error}</p>
+              </div>
+            ) : null}
+          </div>
         </div>
       ) : null}
 
-      {/* Search + status dropdown */}
-      <div className="mt-4 flex flex-wrap items-center gap-3">
-        <input
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          placeholder="Search #id, name, phone, building..."
-          className={fieldCls + " max-w-xs"}
-        />
-        <span className="text-xs text-[#9AA6A4]">{total} contacts</span>
+      {/* Search + filter bar */}
+      <div className="mb-5 flex flex-wrap items-center gap-3 rounded-2xl border border-[#E7E3D9] bg-white p-3 shadow-[0_1px_2px_rgba(15,28,30,0.03)]">
+        <div className="relative min-w-[240px] flex-1 sm:max-w-sm">
+          <SearchIcon
+            size={16}
+            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#AAB3B0]"
+          />
+          <input
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Search #id, name, phone, building..."
+            className={fieldCls + " pl-10"}
+          />
+          {searchInput ? (
+            <button
+              onClick={() => setSearchInput("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#AAB3B0] transition hover:text-[#14201F]"
+            >
+              <X size={14} />
+            </button>
+          ) : null}
+        </div>
+
+        {activeFilterCount > 0 ? (
+          <button
+            onClick={() => {
+              setSearchInput("");
+              go({ q: null, status: "all", page: 1 });
+            }}
+            className="inline-flex items-center gap-1 rounded-full border border-[#E4E1DA] px-3 py-1.5 text-xs font-medium text-[#6C7A78] transition hover:border-[#A03A2B] hover:text-[#A03A2B]"
+          >
+            <X size={12} />
+            Clear filters
+          </button>
+        ) : null}
+
+        <span className="ml-auto whitespace-nowrap rounded-full bg-[#F3F1EB] px-3 py-1.5 text-xs font-medium text-[#8C9795]">
+          {total.toLocaleString("en-AE")} {total === 1 ? "contact" : "contacts"}
+        </span>
       </div>
 
       {/* Bulk-assign bar (managers, when rows selected) */}
       {canManage && selected.size > 0 ? (
-        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-[#1F7A6B]/30 bg-[#1F7A6B]/5 p-3">
-          <span className="text-sm font-medium text-[#14201F]">
-            {selected.size} selected
-          </span>
-          <select
-            className={fieldCls + " max-w-[220px]"}
-            value={assignTo}
-            onChange={(e) => setAssignTo(e.target.value)}
-          >
-            <option value="">Assign to agent...</option>
-            {agents.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.name}
-              </option>
-            ))}
-          </select>
-          <button
-            onClick={bulkAssign}
-            disabled={!assignTo || assignBusy}
-            className="flex items-center gap-2 rounded-md bg-[#1F7A6B] px-3 py-2 text-sm font-medium text-white hover:bg-[#1a6659] disabled:opacity-40"
-          >
-            <UserCheck size={15} /> {assignBusy ? "Assigning" : "Assign"}
-          </button>
-          <button
-            onClick={() => setSelected(new Set())}
-            className="text-xs text-[#6C7A78] hover:text-[#14201F]"
-          >
-            Clear
-          </button>
+        <div className="rise-in mb-5 rounded-2xl border border-[#1F7A6B]/25 bg-gradient-to-r from-[#1F7A6B]/8 to-transparent p-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-sm font-semibold text-[#14201F]">
+              {selected.size} selected
+            </span>
+            <select
+              className={fieldCls + " max-w-[220px]"}
+              value={assignTo}
+              onChange={(e) => setAssignTo(e.target.value)}
+            >
+              <option value="">Assign to agent...</option>
+              {agents.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={bulkAssign}
+              disabled={!assignTo || assignBusy}
+              className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#1F7A6B] to-[#186459] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <UserCheck size={15} /> {assignBusy ? "Assigning…" : "Assign"}
+            </button>
+            <button
+              onClick={() => setSelected(new Set())}
+              className="text-xs font-medium text-[#6C7A78] transition hover:text-[#14201F]"
+            >
+              Clear
+            </button>
+          </div>
         </div>
       ) : null}
 
       {/* List */}
       {items.length === 0 ? (
-        <div className="mt-16 text-center">
-          <p className="text-sm text-[#6C7A78]">No contacts match.</p>
+        <div className="rounded-2xl border border-dashed border-[#D8D3C6] bg-white/60 py-20 text-center">
+          <PhoneCall className="mx-auto h-8 w-8 text-[#D8D3C6]" />
+          <p className="mt-3 text-sm text-[#8C9795]">No contacts match.</p>
         </div>
       ) : (
-        <div className="mt-5 overflow-hidden rounded-xl border border-[#E4E1DA] bg-white">
+        <div className="overflow-hidden rounded-2xl border border-[#E7E3D9] bg-white shadow-[0_1px_2px_rgba(15,28,30,0.04),0_12px_28px_-16px_rgba(15,28,30,0.12)]">
           <div
             className={
-              "hidden border-b border-[#E4E1DA] px-5 py-3 text-xs font-medium uppercase tracking-wide text-[#9AA6A4] lg:grid " +
+              "hidden border-b border-[#F0EEE6] bg-[#FBF9F4] px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#8C9795] lg:grid " +
               (canManage
                 ? "lg:grid-cols-[auto_2fr_2fr_1.2fr_1.4fr]"
                 : "lg:grid-cols-[2fr_2fr_1.2fr_1.4fr]")
@@ -382,7 +450,7 @@ export default function ColdClient({
               <div
                 key={c.id}
                 className={
-                  "grid grid-cols-1 items-center gap-3 border-b border-[#F0EEE9] px-5 py-4 last:border-0 hover:bg-[#FBFAF7] lg:grid " +
+                  "grid grid-cols-1 items-center gap-3 border-b border-[#F0EEE6] px-5 py-4 transition-colors duration-150 last:border-0 hover:bg-[#FBF9F4] lg:grid " +
                   (canManage
                     ? "lg:grid-cols-[auto_2fr_2fr_1.2fr_1.4fr]"
                     : "lg:grid-cols-[2fr_2fr_1.2fr_1.4fr]") +
@@ -404,7 +472,7 @@ export default function ColdClient({
                   className="flex items-center gap-3"
                 >
                   <div
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white shadow-sm"
                     style={{ background: avatarColor(c.name) }}
                   >
                     {initials(c.name)}
@@ -413,7 +481,7 @@ export default function ColdClient({
                     <div className="truncate font-medium text-[#14201F]">
                       {c.name}
                     </div>
-                    <div className="truncate text-xs text-[#6C7A78]">
+                    <div className="truncate text-xs text-[#8C9795]">
                       {c.phone}
                     </div>
                   </div>
@@ -423,16 +491,17 @@ export default function ColdClient({
                     {prop || "-"}
                   </div>
                   {specs ? (
-                    <div className="truncate text-xs text-[#6C7A78]">
+                    <div className="truncate text-xs text-[#8C9795]">
                       {specs}
                     </div>
                   ) : null}
                 </Link>
                 <Link href={`/cold/${c.id}`}>
                   <span
-                    className="inline-block rounded-full px-2.5 py-1 text-xs font-medium"
+                    className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium"
                     style={{ background: st.bg, color: st.fg }}
                   >
+                    <span className="h-1.5 w-1.5 rounded-full" style={{ background: st.fg }} />
                     {c.status}
                   </span>
                 </Link>
@@ -445,8 +514,8 @@ export default function ColdClient({
                       className={
                         "truncate text-xs " +
                         (follow === "Today"
-                          ? "font-medium text-[#C58A12]"
-                          : "text-[#9AA6A4]")
+                          ? "font-semibold text-[#C58A12]"
+                          : "text-[#AAB3B0]")
                       }
                     >
                       {follow}
@@ -461,28 +530,29 @@ export default function ColdClient({
 
       {/* Pagination */}
       {totalPages > 1 ? (
-        <div className="mt-8 flex items-center justify-center gap-1">
+        <div className="mt-8 flex items-center justify-center gap-1.5">
           <button
             onClick={() => go({ page: page - 1 })}
             disabled={page <= 1}
-            className="rounded-md border border-[#E4E1DA] px-3 py-1.5 text-sm text-[#6C7A78] hover:border-[#1F7A6B] disabled:opacity-30"
+            className="inline-flex items-center gap-1 rounded-full border border-[#E4E1DA] bg-white px-3.5 py-1.5 text-sm text-[#6C7A78] transition hover:border-[#1F7A6B] hover:text-[#1F7A6B] disabled:cursor-not-allowed disabled:opacity-30"
           >
+            <ChevronLeft size={14} />
             Prev
           </button>
           {pageNums.map((n, i) =>
             n === "..." ? (
-              <span key={"e" + i} className="px-2 text-sm text-[#9AA6A4]">
-                ...
+              <span key={"e" + i} className="px-2 text-sm text-[#AAB3B0]">
+                ···
               </span>
             ) : (
               <button
                 key={n}
                 onClick={() => go({ page: n })}
                 className={
-                  "rounded-md px-3 py-1.5 text-sm transition " +
+                  "rounded-full px-3.5 py-1.5 text-sm font-medium transition " +
                   (n === page
-                    ? "bg-[#0F1C1E] text-white"
-                    : "border border-[#E4E1DA] text-[#6C7A78] hover:border-[#1F7A6B]")
+                    ? "bg-gradient-to-r from-[#1F7A6B] to-[#186459] text-white shadow-sm"
+                    : "border border-[#E4E1DA] bg-white text-[#6C7A78] hover:border-[#1F7A6B] hover:text-[#1F7A6B]")
                 }
               >
                 {n}
@@ -492,9 +562,10 @@ export default function ColdClient({
           <button
             onClick={() => go({ page: page + 1 })}
             disabled={page >= totalPages}
-            className="rounded-md border border-[#E4E1DA] px-3 py-1.5 text-sm text-[#6C7A78] hover:border-[#1F7A6B] disabled:opacity-30"
+            className="inline-flex items-center gap-1 rounded-full border border-[#E4E1DA] bg-white px-3.5 py-1.5 text-sm text-[#6C7A78] transition hover:border-[#1F7A6B] hover:text-[#1F7A6B] disabled:cursor-not-allowed disabled:opacity-30"
           >
             Next
+            <ChevronRight size={14} />
           </button>
         </div>
       ) : null}
